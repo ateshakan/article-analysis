@@ -1,0 +1,5 @@
+![[Pasted image 20230713230509.png]]
+Temporal filtering can approximate spatial translation. This effect is demonstrated here on a 1D signal, but equally applies to 2D. The input signal is shown at two time instants: I(x, t) = f(x) at time t and I(x, t + 1) = f(x + δ) at time t + 1. The first-order Taylor series expansion of I(x, t + 1) about x approximates well the translated signal. The temporal bandpass is amplified and added to the original signal to generate a larger translation. In this example α = 1, magnifying the motion by 100%, and the temporal filter is a finite difference filter, subtracting the two curves.
+### How to decide temporal filters:
+We first select the temporal bandpass filter to pull out the motions or signals that we wish to be amplified . The choice of filter is generally application dependent. For motion magnification, a filter with a broad passband is preferred; for color amplification of blood flow, a narrow passband produces a more noise-free result.
+![[Pasted image 20230713233458.png]]

@@ -1,0 +1,3 @@
+The temporal filtering used in Eulerian video motion magnification is typically a bandpass filter. This means that the filter only passes frequencies that fall within a certain range. The range of frequencies that are passed is determined by the magnification factor.
+
+For example, if the magnification factor is 2, then the filter will pass frequencies that are between 0 and 1 Hz. This means that the temporal changes in the video sequence that are between 0 and 1 Hz will be amplified.
