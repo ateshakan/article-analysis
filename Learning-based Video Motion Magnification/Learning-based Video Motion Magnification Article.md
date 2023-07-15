@@ -21,6 +21,7 @@ However, these prior methods require careful hand design and often suffer from i
 ![Eulerian VM](Eulerian_Video_Magnification.gif)
 
 Also these techniques suffer from parallax and occlusion.
+
 ![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (1).gif>)
 
 ### Performance limitations of prior works
@@ -51,13 +52,16 @@ In order to tackle these challenges, in this work, they need a better representa
 Lastly, due to the difficulty of obtaining real-world data, they generated synthetic data with a very simple simulation.
 !![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (6).gif>)
 Now, let's have a closer look at the network modeling. In order to train efficiently, they only use two frames as input and represent the motion by simple frame subtraction. This simplifies the difficulty of generating synthetic data.
+
 ![Alt text](image-17.png)
+
 The network architecture consists of three main stages: the **encoder**, the **manipulator**, and the **decoder**. 
 
 The encoder extracts the spatial representation of the input. The manipulator measures the temporal difference between frames and manipulates it by adding it back to the original representation.![Alt text](image-18.png)
 The main assumption behind this architecture is modeling velocity as the finite difference of positions. It's worth mentioning that all the arithmetic operations in the manipulator process each pixel independently.
 
 Additionally, the **texture** information helps to prevent color magnification and preserve constant color. It also helps the representation to focus on structural information.
+
 ![Alt text](image-19.png)
 
 For training, they simply use the **L1 loss** over the synthesized magnified frame. However, this is not enough to induce meaningful representations of texture and shape.  So, they use a simple method to induce disentangled representations through color perturbation. They impose that ***if two frames have the same displacement, they should have the same shape representation***.
@@ -68,13 +72,16 @@ The manipulator is designed to handle a wide variation of magnification factors 
 
 ## Synthetic Data Generation
 Dataset consists of images with segmented foreground pasted directly onto backgrounds. They use segmentation from Pascal VOC and backgrounds from MS COCO. Each object has translational motion only, so no rotation or anything like that. 
-They also randomized the directions and amplitude of motion for each object so that they can teach our network local motion.!![Alt text](image-20.png)
+They also randomized the directions and amplitude of motion for each object so that they can teach our network local motion.
+
+![Alt text](image-20.png)
 
 They use bicubic interpolation for sub-pixel motion and properly round the pixel values so that quantization doesn't give us small motion. They have only two frames for training, so digitizing the two input frames helps understanding why quantization can affect subtle motion.
 
 Remember that videos are usually encoded with bit quantization. Consider this linear image with a sample point shown in red. If we move this image slightly to the right and sample the value, the value of our example won't quite fall on the quantization level. And when we convert these to integers, they get rounded down to the same level, resulting in no motion at all.
 
 To remedy this problem, they quantize our values by randomly rounding them with a probability (Poisson) according to the residue value. 
+
 ![Alt text](image-21.png)
 
 This helps to capture sub-pixel motion more accurately. 
@@ -85,6 +92,7 @@ In order to make training tractable, they also have to limit different parameter
 ![Alt text](Learningbased_Video_Motion_Magnification_ECCV_2018_Oral.gif)
 
 Proposed method preserves the edges better and has fewer ringing artifacts. Here's a frame from the crane sequence. Ringing artifacts are particularly pronounced for the face-based method when processing strong edges, as shown on the right. Our method, by contrast, is trained end-to-end and results in fewer ringing artifacts, as you can see in the middle.
+
 ![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (1)-1.gif>)
 ![Alt text](image-22.png)
 
@@ -114,6 +122,7 @@ Despite these successes, they also observed that the method can sometimes only s
 ### Visualization of network
 ![Alt text](image-25.png)
 ![Alt text](image-26.png)
+
 Lastly, in order to understand what the network has learned, they approximate their encoder response as a linear filter. The top row shows the response of the texture filters, which looks mostly like a blurring kernel. The shear filter at the bottom, on the other hand, shows a variety of derivative filters, including some higher-order ones. This suggests that the network learns reasonable filters consistent with understanding of how motion is detected.
 
 
@@ -126,7 +135,9 @@ Video motion magnification techniques allow us to perceive subtle motions but th
 This article aims to address the limitations of existing video motion magnification techniques and proposes an innovative approach. The objective is to learn the decomposition filter directly from examples using deep convolutional neural networks (CNNs). By doing so, they aim to improve the overall performance, reduce noise, and minimize edge artifacts.
 ## Overview of the Proposed Method: 
 To achieve the objective, they employ a synthetic dataset that realistically simulates small motion. This synthetic dataset is designed with careful considerations, including pixel value interpolation and explicit modeling of quantization. These measures enable the training of a network that generalizes well in real videos.
+
 ![Pasted image 20230714051533.png](Pasted%20image%2020230714051533.png)
+
 The proposed method, **inspired by the [work of Wadhwa et al](http://people.csail.mit.edu/nwadhwa/phase-video/)**, incorporates spatial decomposition filters, representation manipulator, and reconstruction filters. By utilizing a simplified training approach with a two-frame input and magnified difference as the target, the network achieves impressive noise reduction and fewer edge artifacts. The learned representations support linear operations and enable the selection of motion based on frequency bands of interest. This approach presents a significant advancement in the field of video motion magnification, providing enhanced performance and improved control over the amplification process.
 
 ![Alt text](PhaseBased_Video_Motion_Processing.gif)
@@ -137,6 +148,7 @@ Video motion magnification techniques can be categorized into two main approache
 ### Limitations of existing video motion magnification techniques:
 ![Alt text](image.png)
 ![Alt text](image-1.png)
+
 Current Eulerian techniques in video motion magnification, such as those by Wu et al. and Wadhwa et al., have some limitations. These techniques excel at revealing subtle motions but are often hand-designed and do not effectively address issues like occlusion. As a result, they are susceptible to noise and tend to introduce excessive blurring. In contrast, our proposed technique belongs to the Eulerian approach, but our decomposition is directly learned from examples. This learning-based approach results in fewer edge artifacts and improved noise characteristics.
 Another limitation of previous motion magnification methods is their reliance on multi-frame [temporal filtering](https://en.wikibooks.org/wiki/Neuroimaging_Data_Processing/Processing/Steps/Temporal_Filtering#:~:text=Temporal%20filtering%20aims%20to%20remove,interest%20and%20which%20are%20noise.) to isolate motions of interest and prevent noise amplification. Wu et al. and Wadhwa et al. employ standard frequency bandpass filters for this purpose, achieving high-quality results. However, these methods suffer from degraded performance when dealing with large motions or drifts in the input video. In contrast, Elgharib et al. and Zhang et al.  address this limitation by incorporating techniques like affine transformation or second-order derivative temporal processing. Remarkably, our method achieves comparable quality even without relying on temporal filtering.
 
@@ -158,7 +170,9 @@ However, in practice, we may not want to magnify all motion signals within the i
 In previous motion magnification techniques, the filters used to extract and manipulate the motion signals were hand-crafted, requiring domain expertise and manual design. In contrast, purposed method is to learn a set of filters automatically that can effectively extract and manipulate the representations of the motion signal $δ(x, t)$ to generate magnified frames.
 
 *Here in this figure you can see some of the **hand-made** filters based on the specific situation. (Wu et al)*
+
 ![Alt text](image-3.png)
+
 # Deep Convolutional Neural Network Architecture
 
 ![Alt text](image-4.png)
@@ -216,6 +230,7 @@ $G_{m,temporal}(M(t), α) = M(t) + αT(M(t))$ (Equation 4)
 The decoder takes the improved shape representation and texture representation as input. It uses these representations to generate motion magnified frames by applying transformations and combining the enhanced motion information with the texture details. Essentially, the decoder reconstructs the final output frames by leveraging the enhanced shape representation and the texture information.
 
 ### Synthetic Training Dataset
+
 ![Alt text](image-8.png)
 Obtaining real motion magnified video pairs is challenging. Therefore, we utilize a synthetic dataset to generate a large quantity of data. Careful considerations are made to simulate small motions accurately, as any small error can result in significant discrepancies. Our dataset is designed with several key factors in mind.
 
