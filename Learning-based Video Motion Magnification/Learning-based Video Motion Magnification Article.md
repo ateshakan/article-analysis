@@ -51,6 +51,7 @@ In order to tackle these challenges, in this work, they need a better representa
 
 Lastly, due to the difficulty of obtaining real-world data, they generated synthetic data with a very simple simulation.
 !![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (6).gif>)
+
 Now, let's have a closer look at the network modeling. In order to train efficiently, they only use two frames as input and represent the motion by simple frame subtraction. This simplifies the difficulty of generating synthetic data.
 
 ![Alt text](image-17.png)
@@ -58,6 +59,7 @@ Now, let's have a closer look at the network modeling. In order to train efficie
 The network architecture consists of three main stages: the **encoder**, the **manipulator**, and the **decoder**. 
 
 The encoder extracts the spatial representation of the input. The manipulator measures the temporal difference between frames and manipulates it by adding it back to the original representation.![Alt text](image-18.png)
+
 The main assumption behind this architecture is modeling velocity as the finite difference of positions. It's worth mentioning that all the arithmetic operations in the manipulator process each pixel independently.
 
 Additionally, the **texture** information helps to prevent color magnification and preserve constant color. It also helps the representation to focus on structural information.
@@ -105,11 +107,13 @@ Researchers also performed quantitative tests on the noise robustness. For this,
 
 ### Physical Accuracy of the method
 ![Alt text](image-24.png)
+
 To test the physical accuracy of our method, they obtained the hammer sequence from the authors of Wadhwa. They provided accelerometer measurements, which double integrated and used a high-pass filter to avoid drifts. This resulted in the blue line shown on the right. As you can see, this line matches our magnified motion quite well. And as shown on the x/t slice on the right, despite being trained on the two-frame input, proposed method seems to work with temporal filters too.
 
 ![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (8).gif>)
 
 Here's a result of the guitar sequence processed using different temporal filters to select different strings. As you can see, each string was correctly selected by the temporal filter. This suggests that our the shape representation is linear enough with respect to displacement to work with temporal filters.
+
 ![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (4).gif>) ![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (2).gif>) ![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (7).gif>)
 
 
@@ -232,6 +236,7 @@ The decoder takes the improved shape representation and texture representation a
 ### Synthetic Training Dataset
 
 ![Alt text](image-8.png)
+
 Obtaining real motion magnified video pairs is challenging. Therefore, we utilize a synthetic dataset to generate a large quantity of data. Careful considerations are made to simulate small motions accurately, as any small error can result in significant discrepancies. Our dataset is designed with several key factors in mind.
 
 Firstly, we combine real image datasets to incorporate realistic textures. We use 200,000 background images from the MS COCO dataset and 7,000 segmented objects from the PASCAL VOC dataset for the foreground. To simulate the occlusion effect, we directly paste the foreground objects onto the background. Each training sample consists of 7 to 15 randomly scaled foreground objects, ensuring that the network learns local motions by randomizing the amount and direction of motions for both the background and objects.
@@ -255,6 +260,7 @@ In this comparison, the phase-based method exhibits noticeable ringing artifacts
 
 ### The effect of temporal filters
 ![Alt text](image-10.png)
+
 The effect of temporal filters on our method's performance has been examined. Although our method was not trained using temporal filters, experiments demonstrate that the filters can be applied effectively with our representation. For instance, when using temporal filters to select motion on the guitar sequence, the filters correctly identify the vibrating strings, indicating compatibility with our representation.
 
 Furthermore, temporal processing can enhance the quality of our results by preventing the amplification of unwanted motion. This is illustrated by a comparison on the drum sequence. When magnifying the sequence using two frames (static mode) with a temporal filter, blurring artifacts are reduced. However, even without the use of a temporal filter, our method excels at preserving edges and avoids ringing artifacts. In contrast, the phase-based method exhibits significant ringing artifacts, even with the application of a temporal filter.
@@ -263,6 +269,7 @@ Therefore, while temporal filters can improve our method's performance by reduci
 
 ### Two-frames setting results
 ![Alt text](image-11.png)
+
 The two-frames setting is found to be the most suitable for applying our network, aligning well with its training. When magnifying consecutive frames using our network in dynamic mode, we compared the results with the approach by Zhang et al. Fig. 6 illustrates the outcome on the gun sequence, where our network was utilized in dynamic mode without a temporal filter. As seen before, our result exhibits minimal artifacts, while Zhang et al.'s approach suffers from ringing artifacts and excessive blurring, likely due to its reliance on the complex steerable pyramid. Notably, the interpretation of the magnification factor may differ between our method and Zhang et al., but for this particular sequence, using the same magnification factor of 8× yielded a magnified motion of roughly the same size.
 
 Furthermore, our method's performance excels due to its adaptability in the dynamic mode, magnifying consecutive frames. The network's training specifically aligns with this setting, enabling it to produce artifact-free results. In contrast, Zhang et al.'s approach, although employing a similar magnification factor, fails to deliver comparable quality, suffering from ringing artifacts and excessive blurring. This discrepancy may stem from the differences in underlying methodologies, particularly their reliance on the complex steerable pyramid.
@@ -271,6 +278,7 @@ These findings underscore the effectiveness of the two-frames setting for our ne
 
 ### Quantitative analysis
 ![Alt text](image-12.png)
+
 Synthetic examples were generated to evaluate the representation's performance, particularly in visualizing sub-pixel motion and resilience to noise. The tests were conducted without temporal processing, as the aim was to focus on comparing the representation.
 
 For the subpixel motion test, synthetic data with foreground input motion ranging from 0.01 to 1 pixel was generated, and the magnification factor was adjusted to produce 10 pixels of magnified motion. No noise was added, and the background was moved in a different direction to ensure accurate evaluation.
