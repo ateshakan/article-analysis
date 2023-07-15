@@ -17,6 +17,7 @@ To manipulate the displacement Delta, we first need to extract the displacement 
 However, these prior methods require careful hand design and often suffer from issues such as noise and artifacts near object boundaries.
 !![Phase Based](PhaseBased_Video_Motion_Processing-1.gif)
 ![Eulerian VM](Eulerian_Video_Magnification.gif)
+
 Also these techniques suffer from parallax and occlusion.
 ![Alt text](<Learningbased_Video_Motion_Magnification_ECCV_2018_Oral (1).gif>)
 
