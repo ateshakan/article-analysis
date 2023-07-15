@@ -5,15 +5,18 @@ Video [[motion magnification]] techniques allow us to see small motions previous
 Video motion magnification techniques allow us to perceive subtle motions but this is a difficult task, because the motions are so small they can be indistinguishable from noise. Consequently, current video magnification techniques suffer from issues such as noisy outputs and excessive blurring, particularly when dealing with large magnification factors
 ## Objective of the research:
 This article aims to address the limitations of existing video motion magnification techniques and proposes an innovative approach. The objective is to learn the decomposition filter directly from examples using deep convolutional neural networks (CNNs). By doing so, they aim to improve the overall performance, reduce noise, and minimize edge artifacts.
-## Overview of the Proposed Method:
-To achieve the objective, they employ a synthetic dataset that realistically simulates small motion. This synthetic dataset is designed with careful considerations, including pixel value interpolation and explicit modeling of quantization. These measures enable the training of a network that generalizes well in real videos.![[Pasted image 20230714051533.png]]
+## Overview of the Proposed Method: 
+To achieve the objective, they employ a synthetic dataset that realistically simulates small motion. This synthetic dataset is designed with careful considerations, including pixel value interpolation and explicit modeling of quantization. These measures enable the training of a network that generalizes well in real videos.
+![Pasted image 20230714051533.png](Pasted%20image%2020230714051533.png)
 The proposed method, **inspired by the [[work of Wadhwa et al]]**, incorporates spatial decomposition filters, representation manipulator, and reconstruction filters. By utilizing a simplified training approach with a two-frame input and magnified difference as the target, the network achieves impressive noise reduction and fewer edge artifacts. The learned representations support linear operations and enable the selection of motion based on frequency bands of interest. This approach presents a significant advancement in the field of video motion magnification, providing enhanced performance and improved control over the amplification process.
+![Alt text](PhaseBased_Video_Motion_Processing.gif)
+
 # 2. Related work
 ### Lagrangian and Eulerian Approaches in Video Motion Magnification:
 Video motion magnification techniques can be categorized into two main approaches: Lagrangian and Eulerian. The Lagrangian approach involves explicitly extracting the motion field, typically optical flow, and using it to directly move the pixels. On the other hand, Eulerian approaches decompose video frames into representations that facilitate motion manipulation without the need for explicit tracking. These techniques generally consist of three stages: frame decomposition, manipulation of the representation, and reconstruction of the manipulated representation into magnified frames. Wu et al. employ a spatial decomposition method based on the first-order Taylor expansion, while Wadhwa et al. utilize the complex steerable pyramid to extract a phase-based representation. Current Eulerian techniques excel at revealing subtle motions but are typically hand-designed. They often overlook challenges such as occlusion, leading to issues such as noise and excessive blurring. In contrast, our proposed technique belongs to the Eulerian approach, but with a decomposition that is directly learned from examples. As a result, our method exhibits fewer edge artifacts and better noise characteristics.
 ### Limitations of existing video motion magnification techniques:
- ![[Pasted image 20230714040314.png]]
-![[Pasted image 20230714034220.png]]
+![Alt text](image.png)
+![Alt text](image-1.png)
 Current Eulerian techniques in video motion magnification, such as those by Wu et al. and Wadhwa et al., have some limitations. These techniques excel at revealing subtle motions but are often hand-designed and do not effectively address issues like occlusion. As a result, they are susceptible to noise and tend to introduce excessive blurring. In contrast, our proposed technique belongs to the Eulerian approach, but our decomposition is directly learned from examples. This learning-based approach results in fewer edge artifacts and improved noise characteristics.
 Another limitation of previous motion magnification methods is their reliance on multi-frame [[temporal filtering]] to isolate motions of interest and prevent noise amplification. Wu et al. and Wadhwa et al. employ standard frequency bandpass filters for this purpose, achieving high-quality results. However, these methods suffer from degraded performance when dealing with large motions or drifts in the input video. In contrast, Elgharib et al. and Zhang et al.  address this limitation by incorporating techniques like affine transformation or second-order derivative temporal processing. Remarkably, our method achieves comparable quality even without relying on temporal filtering.
 Additionally, it is worth noting that while some recent techniques excel in frame interpolation by explicitly shifting pixels using optical flow or pixel-shifting convolution kernels, they often require re-training when adjusting the magnification factor.
@@ -28,36 +31,36 @@ $I(x, t) = f(x + (1 + α)δ(t))$,
 
 where α is the magnification factor.
 However, in practice, we may not want to magnify all motion signals within the image. Instead, we are interested in selectively magnifying specific motion components that are of interest to us. To achieve this, a selector function $T(·)$ is introduced, which acts as a filter or mask to determine the motion signals to be magnified. The selected motion signal is denoted as $δ˜(x, t) = T(δ(x, t))$, where $T(·)$ typically represents a [[temporal bandpass filter]].
-![[Pasted image 20230714133807.png]]
+![Alt text](image-2.png)
 In previous motion magnification techniques, the filters used to extract and manipulate the motion signals were hand-crafted, requiring domain expertise and manual design. In contrast, purposed method is to learn a set of filters automatically that can effectively extract and manipulate the representations of the motion signal $δ(x, t)$ to generate magnified frames.
 
 *Here in this figure you can see some of the **hand-made** filters based on the specific situation. (Wu et al)*
-![[Pasted image 20230714164605.png]]
+![Alt text](image-3.png)
 # Deep Convolutional Neural Network Architecture
 
-![[Pasted image 20230714170613.png]]
+![Alt text](image-4.png)
 
 Encoder and decoder are fully convolutional, which means they are designed to work with inputs of any resolution. This flexibility allows the network to handle different image sizes effectively. Residual blocks are used in both the encoder and decoder to generate high-quality output. Residual blocks are a type of neural network layer that help capture and propagate important features through the network, leading to improved performance and output quality.
 To reduce the memory usage of the network and increase the size of the receptive field (the effective area that each neuron can "see" in the input), they employ down-sampling at the beginning of the encoder and up-sampling at the end of the decoder. Down-sampling is achieved through strided convolution, which involves using larger strides during the convolution operation to reduce the spatial dimensions of the activations.
 On the other hand, we use nearest-neighbor up-sampling followed by a convolutional layer to avoid checkerboard artifacts, which can occur when using standard up-sampling techniques [20]. Nearest-neighbor up-sampling involves duplicating each pixel in the input to increase the resolution. By combining this with a convolutional layer, which applies learnable filters to the up-sampled features, we ensure smoother and more visually appealing results.
 Through experimental evaluation, we have determined that employing three 3 × 3 residual blocks in the encoder and nine in the decoder generally produces favorable results in terms of network performance and output quality. These choices strike a balance between model complexity and effectiveness, allowing the network to capture and manipulate motion information effectively while maintaining reasonable computational efficiency.
-![[Pasted image 20230714192838.png]]
+![Alt text](image-5.png)
 In Equation (1), it is assumed that there is no change in intensity (represented by f(·)) between frames. However, in reality, this assumption does not hold true. As a result, the network ends up magnifying intensity changes along with motion. To address this issue, we introduce an additional output from the encoder that represents intensity information, referred to as the "texture representation" [9]. This texture representation is similar to the amplitude of the[[ steerable pyramid decomposition]], a technique used for analyzing image features.
 The inclusion of the texture representation helps mitigate undesired intensity magnification and reduces noise in the final output. To further enhance the noise reduction, we downsample the texture representation by a factor of 2. This downsampling operation helps to alleviate noise artifacts. In the context of the network architecture, the outputs of the encoder corresponding to the texture and shape representations are denoted as $V = G_{e,texture}(X)$ and $M = G_{e,shape}(X)$, respectively.
 During the training process, we incorporate a regularization loss to encourage a clear separation between these two representations. This regularization loss penalizes any overlap or mixing of texture and shape information, thereby ensuring that the network learns to generate distinct representations for each. The details of this regularization loss will be discussed in more depth later in the article.
 The objective of our approach is to learn a shape representation, denoted as M, that exhibits a linear relationship with respect to the motion signal $δ(x, t)$. To achieve this, our manipulator module operates by taking the difference between the shape representations of two given frames, denoted as Ma and Mb. We then multiply this difference by a magnification factor, denoted as α, and add it back to the original shape representation. Mathematically, this can be expressed as:
-![[Pasted image 20230714194258.png]]
+$G_m(M_a,M_b, α) = Ma + α ( M_b − M_a)$
 In practice, we have found that introducing some non-linearity into the manipulator module can improve the quality of the magnified output. Specifically, we modify the manipulator equation as
-![[Pasted image 20230714194313.png]]
+$G_m(M_a,M_b, α) = Ma + h (α · g(M_b − M_a))$
 where $g(·)$ represents a 3 × 3 convolution operation followed by a Rectified Linear Unit (ReLU) activation function. The function h(·) is represented by a 3×3 convolution followed by a 3×3 residual block.
-![[Pasted image 20230714194941.png]]
+![Alt text](image-6.png)
 ### Loss function
 During the training process, the entire network is trained in an end-to-end manner. To measure the dissimilarity between the network's output Yˆ and the ground-truth magnified frame Y, we use the l1-loss (mean absolute error). We found that using more advanced loss functions, such as perceptual loss or adversarial losses, did not result in noticeable improvements in the output quality.
 
 To encourage the separation of the texture and shape representations within the network, we introduce perturbations in the intensity of certain frames. The objective is to ensure that the texture representations of the perturbed frames, denoted as $V_b'$ and $V_Y'$, remain unchanged, while their shape representations, denoted as M0b and Mb, also remain unchanged. Specifically, we create perturbed frames, $X_b'$ and $Y'$, by applying color perturbations indicated by the prime symbol. We then compute losses between these perturbed frames and the un-perturbed frames, $V_a$ and $V_b$, as well as losses between the shape representations of the perturbed frames, $M_b'$ and $M_b$.
 
 For all these regularizations, we use the [[l1-loss]] as the measure of dissimilarity. Therefore, during training, the entire network G is optimized by minimizing the final loss function, which consists of the l1-loss between Y and Yˆ, along with the sum of l1-losses between $V_a$ and $V_b$, $V_b'$ and $V_Y'$, and $M_b$ and $M_b'$. The regularization weight λ, set to 0.1, determines the importance of these losses in the overall optimization process.
-![[Pasted image 20230714201612.png]]
+![Alt text](image-7.png)
 ### Training
 We use ADAM with β1 = 0.9 and β2 = 0.999 to minimize the loss with the batch size 4. We set the learning rate to 10−4 with no weight decay. In order to improve robustness to noise, we add Poisson noise with random strengths whose standard deviation is up to 3 on a 0−255 scale for a mid-gray pixel.
 
@@ -84,7 +87,7 @@ $G_{m,temporal}(M(t), α) = M(t) + αT(M(t))$ (Equation 4)
 The decoder takes the improved shape representation and texture representation as input. It uses these representations to generate motion magnified frames by applying transformations and combining the enhanced motion information with the texture details. Essentially, the decoder reconstructs the final output frames by leveraging the enhanced shape representation and the texture information.
 
 ### Synthetic Training Dataset
-![[Pasted image 20230715055222.png]]
+![Alt text](image-8.png)
 Obtaining real motion magnified video pairs is challenging. Therefore, we utilize a synthetic dataset to generate a large quantity of data. Careful considerations are made to simulate small motions accurately, as any small error can result in significant discrepancies. Our dataset is designed with several key factors in mind.
 
 Firstly, we combine real image datasets to incorporate realistic textures. We use 200,000 background images from the MS COCO dataset and 7,000 segmented objects from the PASCAL VOC dataset for the foreground. To simulate the [[occlusion]] effect, we directly paste the foreground objects onto the background. Each training sample consists of 7 to 15 randomly scaled foreground objects, ensuring that the network learns local motions by randomizing the amount and direction of motions for both the background and objects.
@@ -102,19 +105,20 @@ To generate subpixel motion, the researchers consider the [[demosaicking algorit
 [[Subpixel motion]] often manifests as subtle intensity changes that are below the precision level of 8-bit quantization. These changes can be rounded away, particularly in regions with low contrast. To overcome this issue, the researchers introduced uniform quantization noise before quantizing the image. This noise introduced randomness to the quantization process, allowing each pixel to have a chance of rounding up proportionally to its rounding residual. As a result, the representation of subpixel motion was accurately preserved in the quantized image.
 
 # 4. Results and Evaluations
-![[Pasted image 20230715021049.png]]
+![Alt text](image-9.png)
 ### Qualitative comparison
 In this comparison, the phase-based method exhibits noticeable ringing artifacts, while our method demonstrates nearly artifact-free results. This disparity arises from the fact that our representation is trained end-to-end from example motion, allowing it to effectively preserve edges and minimize artifacts.
 
 ### The effect of temporal filters
-![[Pasted image 20230715041858.png]]
+![Alt text](image-10.png)
 The effect of temporal filters on our method's performance has been examined. Although our method was not trained using temporal filters, experiments demonstrate that the filters can be applied effectively with our representation. For instance, when using temporal filters to select motion on the guitar sequence, the filters correctly identify the vibrating strings, indicating compatibility with our representation.
 
 Furthermore, temporal processing can enhance the quality of our results by preventing the amplification of unwanted motion. This is illustrated by a comparison on the drum sequence. When magnifying the sequence using two frames (static mode) with a temporal filter, blurring artifacts are reduced. However, even without the use of a temporal filter, our method excels at preserving edges and avoids ringing artifacts. In contrast, the phase-based method exhibits significant ringing artifacts, even with the application of a temporal filter.
 
 Therefore, while temporal filters can improve our method's performance by reducing certain artifacts caused by undesired motion, our approach remains robust in edge preservation and artifact reduction without relying on temporal filters. These findings highlight the flexibility and effectiveness of our method in handling motion magnification tasks.
 
-### Two-frames setting results![[Pasted image 20230715032401.png]]
+### Two-frames setting results
+![Alt text](image-11.png)
 The two-frames setting is found to be the most suitable for applying our network, aligning well with its training. When magnifying consecutive frames using our network in dynamic mode, we compared the results with the approach by Zhang et al. Fig. 6 illustrates the outcome on the gun sequence, where our network was utilized in dynamic mode without a temporal filter. As seen before, our result exhibits minimal artifacts, while Zhang et al.'s approach suffers from ringing artifacts and excessive blurring, likely due to its reliance on the complex steerable pyramid. Notably, the interpretation of the magnification factor may differ between our method and Zhang et al., but for this particular sequence, using the same magnification factor of 8× yielded a magnified motion of roughly the same size.
 
 Furthermore, our method's performance excels due to its adaptability in the dynamic mode, magnifying consecutive frames. The network's training specifically aligns with this setting, enabling it to produce artifact-free results. In contrast, Zhang et al.'s approach, although employing a similar magnification factor, fails to deliver comparable quality, suffering from ringing artifacts and excessive blurring. This discrepancy may stem from the differences in underlying methodologies, particularly their reliance on the complex steerable pyramid.
@@ -122,7 +126,7 @@ Furthermore, our method's performance excels due to its adaptability in the dyna
 These findings underscore the effectiveness of the two-frames setting for our network, demonstrating its superiority over Zhang et al.'s approach in terms of artifact reduction and the quality of magnified results. The alignment of our method's training with this setting allows it to leverage consecutive frame information effectively, yielding nearly artifact-free magnifications.
 
 ### Quantitative analysis
-![[Pasted image 20230715041826.png]]
+![Alt text](image-12.png)
 Synthetic examples were generated to evaluate the representation's performance, particularly in visualizing sub-pixel motion and resilience to noise. The tests were conducted without temporal processing, as the aim was to focus on comparing the representation.
 
 For the subpixel motion test, synthetic data with foreground input motion ranging from 0.01 to 1 pixel was generated, and the magnification factor was adjusted to produce 10 pixels of magnified motion. No noise was added, and the background was moved in a different direction to ensure accurate evaluation.
@@ -134,3 +138,6 @@ Throughout the tests, the described method consistently outperformed the phase-b
 In the noisy conditions, the described method consistently outperformed the phase-based method. As the noise factor increased above 1.0, the performance of the phase-based method quickly dropped to the baseline level, while the described method maintained higher performance. The performance degradation of the described method was more pronounced with smaller input motion, as distinguishing actual motion from noise becomes more challenging.
 
 Overall, the quantitative analysis confirmed that the described method outperforms the phase-based method in terms of sub-pixel motion visualization and resilience to noise, highlighting the effectiveness and robustness of the representation.
+
+
+
