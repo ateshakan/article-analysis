@@ -31,6 +31,7 @@ I suggest including an assessment of the performance of Eulerian Video Magnifica
 - **Motion Magnification Intensity**: Sometimes, when magnifying color, small motions can also get amplified, which may negatively impact the output and make it difficult to recognize. Motion magnification intensity is used as a qualitative parameter to assess the effectiveness of magnifying motion. It observes the change in intensity with changes in the pyramid level in both EVM and PVM methods.
 
 ![Alt text](image-15.png)
+
 As you can see on the table, despite PVM having less noise, EVM outperforms PVM on execution time.
 *[Android-based implementation of Eulerian Video Magnification for vital signs monitoring](https://www.semanticscholar.org/paper/Android-based-implementation-of-Eulerian-Video-for-Chambino/fd800357d760dbeb373ce1d1661cde42e562ec94)*
 
