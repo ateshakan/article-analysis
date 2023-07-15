@@ -168,6 +168,7 @@ On the other hand, they use nearest-neighbor up-sampling followed by a convoluti
 Through experimental evaluation, they have determined that employing three 3 × 3 residual blocks in the encoder and nine in the decoder generally produces favorable results in terms of network performance and output quality. These choices strike a balance between model complexity and effectiveness, allowing the network to capture and manipulate motion information effectively while maintaining reasonable computational efficiency.
 
 ![Alt text](image-5.png)
+
 In Equation (1), it is assumed that there is no change in intensity (represented by f(·)) between frames. However, in reality, this assumption does not hold true. As a result, the network ends up magnifying intensity changes along with motion. To address this issue, researchers introduce an additional output from the encoder that represents intensity information, referred to as the "texture representation" [9]. This texture representation is similar to the amplitude of the [steerable pyramid decomposition](https://en.wikipedia.org/wiki/Pyramid_(image_processing)), a technique used for analyzing image features.
 The inclusion of the texture representation helps mitigate undesired intensity magnification and reduces noise in the final output. To further enhance the noise reduction, we downsample the texture representation by a factor of 2. This downsampling operation helps to alleviate noise artifacts. In the context of the network architecture, the outputs of the encoder corresponding to the texture and shape representations are denoted as $V = G_{e,texture}(X)$ and $M = G_{e,shape}(X)$, respectively.
 During the training process, we incorporate a regularization loss to encourage a clear separation between these two representations. This regularization loss penalizes any overlap or mixing of texture and shape information, thereby ensuring that the network learns to generate distinct representations for each. The details of this regularization loss will be discussed in more depth later in the article.
@@ -176,14 +177,18 @@ $G_m(M_a,M_b, α) = Ma + α ( M_b − M_a)$
 In practice, we have found that introducing some non-linearity into the manipulator module can improve the quality of the magnified output. Specifically, we modify the manipulator equation as
 $G_m(M_a,M_b, α) = Ma + h (α · g(M_b − M_a))$
 where $g(·)$ represents a 3 × 3 convolution operation followed by a Rectified Linear Unit (ReLU) activation function. The function h(·) is represented by a 3×3 convolution followed by a 3×3 residual block.
+
 ![Alt text](image-6.png)
+
 ### Loss function
 During the training process, the entire network is trained in an end-to-end manner. To measure the dissimilarity between the network's output Yˆ and the ground-truth magnified frame Y, we use the l1-loss (mean absolute error). We found that using more advanced loss functions, such as perceptual loss or adversarial losses, did not result in noticeable improvements in the output quality.
 
 To encourage the separation of the texture and shape representations within the network, we introduce perturbations in the intensity of certain frames. The objective is to ensure that the texture representations of the perturbed frames, denoted as $V_b'$ and $V_Y'$, remain unchanged, while their shape representations, denoted as M0b and Mb, also remain unchanged. Specifically, we create perturbed frames, $X_b'$ and $Y'$, by applying color perturbations indicated by the prime symbol. We then compute losses between these perturbed frames and the un-perturbed frames, $V_a$ and $V_b$, as well as losses between the shape representations of the perturbed frames, $M_b'$ and $M_b$.
 
 For all these regularizations, we use the [L1-loss](https://pytorch.org/docs/stable/generated/torch.nn.L1Loss.html) as the measure of dissimilarity. Therefore, during training, the entire network G is optimized by minimizing the final loss function, which consists of the l1-loss between Y and Yˆ, along with the sum of l1-losses between $V_a$ and $V_b$, $V_b'$ and $V_Y'$, and $M_b$ and $M_b'$. The regularization weight λ, set to 0.1, determines the importance of these losses in the overall optimization process.
+
 ![Alt text](image-7.png)
+
 ### Training
 We use ADAM with β1 = 0.9 and β2 = 0.999 to minimize the loss with the batch size 4. We set the learning rate to 10−4 with no weight decay. In order to improve robustness to noise, we add Poisson noise with random strengths whose standard deviation is up to 3 on a 0−255 scale for a mid-gray pixel.
 
