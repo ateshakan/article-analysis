@@ -1,33 +1,35 @@
 
 - [Summary](#summary)
 - [Related Work](#related-work)
-  * [Micro-Expression Recognition:](#micro-expression-recognition)
-    + [1. A Comparative Study of Spontaneous Micro-expression Spotting and Recognition Methods:](#1-a-comparative-study-of-spontaneous-micro-expression-spotting-and-recognition-methods)
+  - [Micro-Expression Recognition:](#micro-expression-recognition)
+    - [1. A Comparative Study of Spontaneous Micro-expression Spotting and Recognition Methods:](#1-a-comparative-study-of-spontaneous-micro-expression-spotting-and-recognition-methods)
       - [Method for ME spotting they proposed on this article:](#method-for-me-spotting-they-proposed-on-this-article)
-        * [Facial points tracking and block division](#facial-points-tracking-and-block-division)
-        * [Feature Extraction](#feature-extraction)
-        * [Feature difference (FD) analysis](#feature-difference-fd-analysis)
-        * [Thresholding and peak detection](#thresholding-and-peak-detection)
+        - [Facial points tracking and block division](#facial-points-tracking-and-block-division)
+        - [Feature Extraction](#feature-extraction)
+        - [Feature difference (FD) analysis](#feature-difference-fd-analysis)
+        - [Thresholding and peak detection](#thresholding-and-peak-detection)
       - [Method for ME recognition proposed by this paper:](#method-for-me-recognition-proposed-by-this-paper)
-        * [Motion magnification:](#motion-magnification)
-        * [Temporal interpolation model](#temporal-interpolation-model)
-        * [Feature extraction](#feature-extraction-1)
+        - [Face alignment:](#face-alignment)
+        - [Motion magnification:](#motion-magnification)
+        - [Temporal interpolation model](#temporal-interpolation-model)
+        - [Feature extraction](#feature-extraction-1)
       - [Classification](#classification)
-    + [2. Two stream Difference Network:](#2-two-stream-difference-network)
-  * [Action Unit Detection](#action-unit-detection)
+    - [2. Two stream Difference Network:](#2-two-stream-difference-network)
+  - [Action Unit Detection](#action-unit-detection)
 - [Methodology](#methodology)
-  * [Motion Representation](#motion-representation)
-    + [Motion Extraction](#motion-extraction)
+  - [Motion Representation](#motion-representation)
+    - [Motion Extraction](#motion-extraction)
       - [Linearization:](#linearization)
+      - [Learnable Parameters](#learnable-parameters)
       - [Frame Difference Normalization](#frame-difference-normalization)
       - [Network Architecture](#network-architecture)
-    + [Experiments](#experiments)
+    - [Experiments](#experiments)
       - [Dataset](#dataset)
       - [Metrics](#metrics)
       - [Training settings](#training-settings)
       - [Ablation Studies](#ablation-studies)
-        * [Number of Frames](#number-of-frames)
-        * [Learnability](#learnability)
+        - [Number of Frames](#number-of-frames)
+        - [Learnability](#learnability)
       - [Comparison to State of Art](#comparison-to-state-of-art)
 
 
@@ -41,9 +43,10 @@ To overcome these challenges, the paper introduces a new approach called Learnab
 ### 1. A Comparative Study of Spontaneous Micro-expression Spotting and Recognition Methods:
 [In this paper](https://ieeexplore.ieee.org/document/7851001), researchers contributes as creating the first method for spotting spontaneous MEs in long videos (by exploiting feature difference contrast). They present an advanced ME recognition framework which tested on SMIC and CASMEII spontaneous ME databases. Also they proposed the first automatic ME analysis system.
 #### Method for ME spotting they proposed on this article:
-![[Pasted image 20230717232624.png]]
+![Alt text](image.png)
+
 ##### Facial points tracking and block division
-![[Pasted image 20230717233906.png]]
+![Alt text](image-1.png)
 
 In the proposed method, the first frame of the video is used to detect the positions of two inner eye corners and a nasal spine point. These points are then tracked throughout the sequence using the Kanade-Lucas-Tomasi algorithm. The facial area is divided into equal-sized blocks, and the block structure remains fixed based on the coordinates of the three tracked points.
 
@@ -56,7 +59,7 @@ Two options are tested for the reference frame: one uses the **first frame of th
 
 ##### Feature difference (FD) analysis
 The basic idea of FD analysis is as follows: for each **current frame(CF)**, its features are compared to the respective **average feature frame(AFF)** by calculating the dissimilarity of the feature vectors. By sliding a time window of N frames, this comparison is repeated for each frame excluding the first k frames from the beginning and the last k frames at the end of the video, where **TF(tail frame)** and **HF(head frame)** would exceed the video boundaries. We define $(k = 1/2 × (N − 1))$. The average feature frame (AFF) is defined as a feature vector representing the average of the features of TF and HF.
-![[Pasted image 20230717235719.png]]
+![Alt text](image-2.png)
 
 *Illustration of terms used in feature difference (FD) analysis. The red curve shows a rapid facial movement (e.g. an ME) which produces a large FD; the blue curve shows a slower facial movement (e.g. an ordinary FE) which produces smaller FD.*
 
@@ -64,7 +67,8 @@ The basic idea of FD analysis is as follows: for each **current frame(CF)**, its
 And then the method calculates FD values for each frame in 36 blocks, selects the M greatest block FD values, and obtains an initial difference vector. Contrast is applied to the difference vector, negative values are set to zero, and thresholding and peak detection techniques are used to identify peaks indicating frames with high intensity of rapid facial movements.
 
 #### Method for ME recognition proposed by this paper:
-![[Pasted image 20230718001053.png]]
+![Alt text](image-3.png)
+
 ##### Face alignment:
 Face alignment is needed to minimize the differences of face sizes and face shapes across different video samples. 
 - A frontal face image with neutral expression, denoted as $I_{mod}$ is chosen on model face. 
@@ -76,7 +80,8 @@ This alignment and normalization process ensures that the frames of each ME clip
 
 ##### Motion magnification:
 The paper proposes using the Eulerian video magnification method to amplify the subtle motions in videos.
-![[Pasted image 20230718003341.png]]
+![Alt text](image-4.png)
+
 ##### Temporal interpolation model
 In ME recognition another challenge comes from the short durations of micro-expressions, especially when the videos are recorded at low frame rates. For instance, with a standard recording speed of 25 frames per second (fps), some micro-expressions may **only last for four to five frames.
 
@@ -88,7 +93,8 @@ By controlling the variable t at different time points, the TIM method allows fo
 Several spatial-temporal local texture descriptors have been demonstrated to be effective in tackling the FE recognition problem. In this paper they compared 3 kinds of features in their ME recognition framework.
 **- LBP on three orthogonal planes:**
 	A video sequence can be thought as a stack of XY planes on T dimension, as well as a stack of XT planes on Y dimension, or a stack of YT planes on X dimension. The XT and YT plane textures can provide information about the dynamic process of the motion transitions. Figure 7(a) presents the textures of XY, XT and YT plane around the mouth corner of one ME clip. *[Dynamic Texture Recognition Using Local Binary Patterns with an Application to Facial Expressions](https://www.researchgate.net/publication/6397809_Dynamic_Texture_Recognition_Using_Local_Binary_Patterns_with_an_Application_to_Facial_Expressions)*
-![[Pasted image 20230718005727.png]]
+![Alt text](image-5.png)
+
 
 - Histogram of Oriented Gradients (HOG) and Histogram of Intensity Gradient Orientations (HIGO): HOG is a well-known descriptor for capturing gradient orientations in images. HIGO is an extension of HOG that takes into account variations in illumination or contrast. In this work, the 3D spatial-temporal versions of HOG and HIGO are obtained by extending the descriptors from the XY plane to the three orthogonal planes (XY, XT, and YT). Similar to LBP-TOP, histograms are computed from each block/cuboid in the three planes. The histograms from each plane are normalized using local L1 normalization, and the normalized histograms are concatenated to form the final descriptor.
 
@@ -97,7 +103,9 @@ To determine the best parameters for the LSVM, a five-fold cross-validation is p
 
 ### 2. Two stream Difference Network:
 More recently, motion magnification has been used with neural networks. Samples are first magnified before going through a neural network. TSDN ([Two Stream Difference Network](https://ietresearch.onlinelibrary.wiley.com/doi/10.1049/cvi2.12030)) performs frame difference between the **onset** and **apex** frame in the hidden representations of an autoencoder. The frame differences are then fed through a neural network for predictions.
-![[Pasted image 20230718015253.png]]
+
+![Alt text](image-6.png)
+
 *Framework of two‐stream difference network method.*
 - Pre‐processing module: it mainly performs face detection, face alignment, and spotting apex frames on the image sequence 
 - Two‐stream encoder‐decoder network: encode and decoder the onset apex frame by the identity and micro‐ expression stream through CNN
@@ -118,7 +126,8 @@ After the motion features have been extracted, they are passed through a Convolu
 **LED is designed to be a model-agnostic approach that can be integrated at the beginning of a network. It provides a foundation for ME analysis and can be used as a starting point for subsequent tasks.**
 
 ## Motion Representation
-![[Pasted image 20230718035942.png]]
+![Alt text](image-7.png)
+
 As you can see on onset frame and apex frame the difference is extremely small. Therefore, the facial dynamics between frames offers better representation to find subtle differences.  The commonly used methods for motion extraction in ME recognition are optical flow and motion magnification. However, these methods suffer from a separation between the motion representation and the learned features, which prevents an end-to-end approach for fine-tuning the motion representation.
 
 This separation poses a challenge because it limits the ability to optimize and refine the motion representation together with the rest of the network in an end-to-end manner. In other words, the motion extraction process and the subsequent feature learning process are not integrated seamlessly, making it difficult to jointly optimize and fine-tune the motion representation based on the specific task requirements.
@@ -126,7 +135,8 @@ This separation poses a challenge because it limits the ability to optimize and 
 In LED, the parameters of the motion extraction process are made learnable, meaning they can be adjusted and optimized during training. This allows the motion representation to be fine-tuned alongside the rest of the network, enabling the model to learn task-specific features that enhance performance in Micro-Expression (ME) recognition.
 
 By integrating the motion extraction process with the overall feature learning process in an end-to-end fashion, LED ensures that the motion representation is optimized specifically for the ME recognition task. This leads to improved performance as the model can effectively capture and utilize the subtle motion dynamics present in MEs.
-![[Pasted image 20230718051157.png]]
+
+![Alt text](image-8.png)
 
 ### Motion Extraction
 EVM, first spatially decomposes the frames then uses a temporal bandpass filter to extract the motion information $B_{xy}^t$ , where x and y refer to the coordinates and t to time. It is found that adding the extracted motion $B_{xy}^t$ is unnecessary for detecting AUs. An issue with the filtering approach is that the user must set the hyperparameters of the filter: amplification factor $a$ and the cutoff frequencies r1 and r2. These values depend highly on the magnitude and amount of the input's temporal changes.  
@@ -151,10 +161,10 @@ def calculate_W(T, alpha=20, r1=0.4, r2=0.05):
                 W[i, j] = alpha * (r1 - r2)
     return W
 ```
-![[Pasted image 20230718063000.png]]
+![Alt text](image-9.png)
 
 
-![[Pasted image 20230718063047.png]]
+![Alt text](image-10.png)
 *This is the linearization on the original paper*
 
 The reason they modified the original version because they are only interested in the motion, not amplification of it. Here $r_1$ and $r2$ are the bandpass values, a is the motion magnification factor, $a= j - i$, $b = min(l, i - 1)$ and $i = j$ corresponding to the number of frames being used. This drastically reduces the computational load compared to EVM, as the motion representation can now be extracted with a simple tensor contraction.
@@ -167,18 +177,23 @@ After deriving matrix $W$ matrix now it can be used as a parameter in a neural n
 By incorporating the optimization process as the first layer, the entire network becomes end-to-end. This means that the motion representation and the subsequent convolutional features are learned simultaneously. This joint learning allows the motion representation to be directly learned from the data, which is different from methods like optical flow and motion magnification.
 
 #### Frame Difference Normalization
-![[Pasted image 20230718161411.png]]
+![Alt text](image-11.png)
+
 With linearized formulation we can also think of movement extraction as weighted frame difference. This allows us to apply frame difference normalization which proposed on [DeepPhys: Video-Based Physiological Measurement Using Convolutional Attention Networks]([[1805.07888] DeepPhys: Video-Based Physiological Measurement Using Convolutional Attention Networks (arxiv.org)](https://arxiv.org/abs/1805.07888))
 The authors observe an issue when taking differences between frames due to the assumption of a homogeneous stationary luminance intensity. As a result of uneven skin contours and different distances to the light source the luminance intensity has different spatial distribution with different setups. To remove the effect from the difference $B^t_{xy}$ , it is divided by the temporal mean. We generalize the formula for the weighted frame difference as
-![[Pasted image 20230718162651.png]]
+
+![Alt text](image-12.png)
+
 where Wi are the weights for each frame.
 
-![[Pasted image 20230718162844.png]]
+![Alt text](image-13.png)
+
 *It can be seen that the learned parameters provide a cleaner representation and the normalization removes some noisy pixels that do not provide value to the classification*
 
 #### Network Architecture
 The proposed network architecture based on SSSNet from [Micro-expression recognition with noisy labels](https://oulurepo.oulu.fi/handle/10024/32856) due to it's simplicity and performance of the network architecture. These types of architectures are better for this purpose because of the lack of real world data.
-![[Pasted image 20230718163447.png]]
+
+![Alt text](image-14.png)
 
 This architecture is modified on the proposed paper:
 - To prevent overfitting, dropout layers are added between the hidden layers of the network. Despite its small size, the network still has a tendency to overfit the data.
@@ -186,7 +201,8 @@ This architecture is modified on the proposed paper:
 - Since the input now consists of a sequence of frames instead of a single frame, modifications are made to the network architecture. Two-dimensional convolution, pooling, batch normalization, and dropout operations are replaced with their three-dimensional counterparts to account for the temporal dimension of the input data.
 
 - Given the increased complexity of the task, the number of channels is also increased. The first convolutional layer has 32 channels, the second convolutional layer has 64 channels, and the linear layer has 256 channels.
-- ![[Pasted image 20230718165728.png]]
+![Alt text](image-15.png)
+
 ```python
 class Net(nn.Module):
     def __init__(self, task_num, dropout=0.5):
@@ -229,7 +245,8 @@ To address the limited number of samples in ME recognition and account for the i
 The LOSO protocol helps to evaluate the generalization performance of the ME recognition model across different subjects by ensuring that the testing data does not overlap with the training data.
 
 To mitigate the issue of class imbalance, the macro F1-score is often used as an evaluation metric instead of accuracy. The macro F1-score considers the performance of each class individually and calculates the average F1-score across all classes. This helps to provide a more balanced assessment of the model's performance, taking into account the varying class frequencies in the dataset
-![[Pasted image 20230718171859.png]]
+
+![Alt text](image-16.png)
 
 ```python
 class MultiTaskF1(nn.Module):
@@ -257,10 +274,12 @@ class MultiTaskF1(nn.Module):
 - **ResNet Backbone**: Among ResNet 18 and 34 models, the ResNet 18 model is chosen as it achieves similar results to ResNet 34 but with a smaller network size.
 
 #### Ablation Studies
-![[Pasted image 20230718193829.png]]
+![Alt text](image-17.png)
+
 Ablation studies refer to conducting experiments to analyze the impact of specific components or techniques by removing or altering them. By adding normalization we can observe an increase of around one percentage point. By incorporating learning into the process, a similar performance increase can be observed. However, when the log transform is not used for the parameters, the values of r1 and r2 become more unstable and often result in negative values. By applying the log transformation, we can observe faster convergence and more stable values for the parameters, eliminating duplicate solutions represented by negative values. This leads to an improvement in performance, as shown in the last row of the table.
 
-![[Pasted image 20230718193026.png]]
+![Alt text](image-18.png)
+
 - **RGB**: Initial experiment using raw RGB videos shows limited performance, with only AU4 being identified effectively. (*Subtle changes between RGB frames are challenging to learn with limited data and a small CNN.*)
 - **MM**: Motion magnification is applied, resulting in significant performance improvement, increasing the average F1-score from 55.3 to 71.7. (*Motion magnification helps identify even the difficult AU7*)
 - **FD**: Simple frame difference, using the difference between consecutive frames, shows a slight performance increase compared to motion magnification.
@@ -268,15 +287,18 @@ Ablation studies refer to conducting experiments to analyze the impact of specif
 
 ##### Number of Frames
 The best performance was achieved with 5 frames, but there were negligible differences when using 8 or 12 frames. This suggests that many of the frames are redundant when using LED, but relying on a single frame may not provide sufficient information. It's important to note that these findings may not fully generalize to other methods, and LED's preference for a lower number of frames could be attributed to its limitations in learning more complex patterns.
-![[Pasted image 20230718200521.png]]
+
+![Alt text](image-19.png)
+
 ##### Learnability
-![[Pasted image 20230718200643.png]]
+![Alt text](image-20.png)
 This table illustrate how the parameters change during the training process on the CASMEII dataset. Specifically, we observe a significant decrease in the magnification value, indicating that it is not necessary for the motion extraction approach. However, it still serves as a scaling factor and takes on different values across datasets and subjects. We notice that the values tend to converge around 100 frames, suggesting that a narrow frequency band is sufficient for the network.
 
 #### Comparison to State of Art
 
 
-![[Pasted image 20230718201615.png]]
+![Alt text](image-21.png)
+
 CASME II Results:
 - LED outperformed previous methods for detecting action units in CASME II.
 - The average F1-Score improved by around 11 compared to the DVASP method when using the SSSNet backbone.
