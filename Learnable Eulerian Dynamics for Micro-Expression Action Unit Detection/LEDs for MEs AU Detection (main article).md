@@ -1,3 +1,36 @@
+
+- [Summary](#summary)
+- [Related Work](#related-work)
+  * [Micro-Expression Recognition:](#micro-expression-recognition)
+    + [1. A Comparative Study of Spontaneous Micro-expression Spotting and Recognition Methods:](#1-a-comparative-study-of-spontaneous-micro-expression-spotting-and-recognition-methods)
+      - [Method for ME spotting they proposed on this article:](#method-for-me-spotting-they-proposed-on-this-article)
+        * [Facial points tracking and block division](#facial-points-tracking-and-block-division)
+        * [Feature Extraction](#feature-extraction)
+        * [Feature difference (FD) analysis](#feature-difference-fd-analysis)
+        * [Thresholding and peak detection](#thresholding-and-peak-detection)
+      - [Method for ME recognition proposed by this paper:](#method-for-me-recognition-proposed-by-this-paper)
+        * [Motion magnification:](#motion-magnification)
+        * [Temporal interpolation model](#temporal-interpolation-model)
+        * [Feature extraction](#feature-extraction-1)
+      - [Classification](#classification)
+    + [2. Two stream Difference Network:](#2-two-stream-difference-network)
+  * [Action Unit Detection](#action-unit-detection)
+- [Methodology](#methodology)
+  * [Motion Representation](#motion-representation)
+    + [Motion Extraction](#motion-extraction)
+      - [Linearization:](#linearization)
+      - [Frame Difference Normalization](#frame-difference-normalization)
+      - [Network Architecture](#network-architecture)
+    + [Experiments](#experiments)
+      - [Dataset](#dataset)
+      - [Metrics](#metrics)
+      - [Training settings](#training-settings)
+      - [Ablation Studies](#ablation-studies)
+        * [Number of Frames](#number-of-frames)
+        * [Learnability](#learnability)
+      - [Comparison to State of Art](#comparison-to-state-of-art)
+
+
 # Summary
 The paper highlights that traditional AU detection methods used for macro-expressions are not suitable for micro-expressions due to their subtlety. Instead, the authors propose utilizing temporal changes between frames to analyze these subtle facial movements. They mention two techniques, namely motion magnification and optical flow, that can effectively extract motion information from the temporal domain. However, these techniques have limitations such as dependence on parameters and computational complexity.
 
