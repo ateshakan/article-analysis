@@ -1,3 +1,35 @@
+<!-- TOC start  -->
+
+- [My summary over this paper:](#my-summary-over-this-paper)
+  * [Methodology](#methodology)
+    + [Performance limitations of prior works](#performance-limitations-of-prior-works)
+  * [Synthetic Data Generation](#synthetic-data-generation)
+  * [Results](#results)
+    + [Quantitative tests](#quantitative-tests)
+    + [Physical Accuracy of the method](#physical-accuracy-of-the-method)
+    + [Visualization of network](#visualization-of-network)
+- [More in-depth analysis:](#more-in-depth-analysis)
+- [1. Introduction](#1-introduction)
+  * [Background and motivations:](#background-and-motivations)
+  * [Objective of the research:](#objective-of-the-research)
+  * [Overview of the Proposed Method: ](#overview-of-the-proposed-method)
+- [2. Related work](#2-related-work)
+    + [Lagrangian and Eulerian Approaches in Video Motion Magnification:](#lagrangian-and-eulerian-approaches-in-video-motion-magnification)
+    + [Limitations of existing video motion magnification techniques:](#limitations-of-existing-video-motion-magnification-techniques)
+- [3. Methodology](#3-methodology)
+- [Deep Convolutional Neural Network Architecture](#deep-convolutional-neural-network-architecture)
+    + [Loss function](#loss-function)
+    + [Training](#training)
+    + [Applying 2-frames setting to videos](#applying-2-frames-setting-to-videos)
+    + [Temporal operation](#temporal-operation)
+    + [Synthetic Training Dataset](#synthetic-training-dataset)
+- [4. Results and Evaluations](#4-results-and-evaluations)
+    + [Qualitative comparison](#qualitative-comparison)
+    + [The effect of temporal filters](#the-effect-of-temporal-filters)
+    + [Two-frames setting results](#two-frames-setting-results)
+    + [Quantitative analysis](#quantitative-analysis)
+
+<!-- TOC end -->
 # My summary over this paper:
 The paper discusses learning-based video motion magnification, which aims to amplify subtle motions in videos to make them more visible. The technique has various applications, including health monitoring and structural analysis. Traditional methods involve spatial decomposition, temporal filtering, and reconstruction, but they suffer from issues like noise and artifacts near object boundaries.
 
