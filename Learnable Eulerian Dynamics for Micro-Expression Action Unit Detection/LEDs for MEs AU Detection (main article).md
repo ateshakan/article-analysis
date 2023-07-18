@@ -43,6 +43,7 @@ To overcome these challenges, the paper introduces a new approach called Learnab
 ### 1. A Comparative Study of Spontaneous Micro-expression Spotting and Recognition Methods:
 [In this paper](https://ieeexplore.ieee.org/document/7851001), researchers contributes as creating the first method for spotting spontaneous MEs in long videos (by exploiting feature difference contrast). They present an advanced ME recognition framework which tested on SMIC and CASMEII spontaneous ME databases. Also they proposed the first automatic ME analysis system.
 #### Method for ME spotting they proposed on this article:
+
 ![Alt text](image.png)
 
 ##### Facial points tracking and block division
@@ -59,6 +60,7 @@ Two options are tested for the reference frame: one uses the **first frame of th
 
 ##### Feature difference (FD) analysis
 The basic idea of FD analysis is as follows: for each **current frame(CF)**, its features are compared to the respective **average feature frame(AFF)** by calculating the dissimilarity of the feature vectors. By sliding a time window of N frames, this comparison is repeated for each frame excluding the first k frames from the beginning and the last k frames at the end of the video, where **TF(tail frame)** and **HF(head frame)** would exceed the video boundaries. We define $(k = 1/2 × (N − 1))$. The average feature frame (AFF) is defined as a feature vector representing the average of the features of TF and HF.
+
 ![Alt text](image-2.png)
 
 *Illustration of terms used in feature difference (FD) analysis. The red curve shows a rapid facial movement (e.g. an ME) which produces a large FD; the blue curve shows a slower facial movement (e.g. an ordinary FE) which produces smaller FD.*
@@ -67,6 +69,7 @@ The basic idea of FD analysis is as follows: for each **current frame(CF)**, its
 And then the method calculates FD values for each frame in 36 blocks, selects the M greatest block FD values, and obtains an initial difference vector. Contrast is applied to the difference vector, negative values are set to zero, and thresholding and peak detection techniques are used to identify peaks indicating frames with high intensity of rapid facial movements.
 
 #### Method for ME recognition proposed by this paper:
+
 ![Alt text](image-3.png)
 
 ##### Face alignment:
@@ -80,6 +83,7 @@ This alignment and normalization process ensures that the frames of each ME clip
 
 ##### Motion magnification:
 The paper proposes using the Eulerian video magnification method to amplify the subtle motions in videos.
+
 ![Alt text](image-4.png)
 
 ##### Temporal interpolation model
@@ -93,6 +97,7 @@ By controlling the variable t at different time points, the TIM method allows fo
 Several spatial-temporal local texture descriptors have been demonstrated to be effective in tackling the FE recognition problem. In this paper they compared 3 kinds of features in their ME recognition framework.
 **- LBP on three orthogonal planes:**
 	A video sequence can be thought as a stack of XY planes on T dimension, as well as a stack of XT planes on Y dimension, or a stack of YT planes on X dimension. The XT and YT plane textures can provide information about the dynamic process of the motion transitions. Figure 7(a) presents the textures of XY, XT and YT plane around the mouth corner of one ME clip. *[Dynamic Texture Recognition Using Local Binary Patterns with an Application to Facial Expressions](https://www.researchgate.net/publication/6397809_Dynamic_Texture_Recognition_Using_Local_Binary_Patterns_with_an_Application_to_Facial_Expressions)*
+
 ![Alt text](image-5.png)
 
 
@@ -165,6 +170,7 @@ def calculate_W(T, alpha=20, r1=0.4, r2=0.05):
 
 
 ![Alt text](image-10.png)
+
 *This is the linearization on the original paper*
 
 The reason they modified the original version because they are only interested in the motion, not amplification of it. Here $r_1$ and $r2$ are the bandpass values, a is the motion magnification factor, $a= j - i$, $b = min(l, i - 1)$ and $i = j$ corresponding to the number of frames being used. This drastically reduces the computational load compared to EVM, as the motion representation can now be extracted with a simple tensor contraction.
@@ -290,8 +296,10 @@ The best performance was achieved with 5 frames, but there were negligible diffe
 
 ![Alt text](image-19.png)
 
+
 ##### Learnability
 ![Alt text](image-20.png)
+
 This table illustrate how the parameters change during the training process on the CASMEII dataset. Specifically, we observe a significant decrease in the magnification value, indicating that it is not necessary for the motion extraction approach. However, it still serves as a scaling factor and takes on different values across datasets and subjects. We notice that the values tend to converge around 100 frames, suggesting that a narrow frequency band is sufficient for the network.
 
 #### Comparison to State of Art
