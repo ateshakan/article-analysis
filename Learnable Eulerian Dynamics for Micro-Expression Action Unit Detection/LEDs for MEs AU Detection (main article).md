@@ -72,3 +72,61 @@ More recently, motion magnification has been used with neural networks. Samples 
 - The micro‐expression image is the **apex** image, and the identity image is the **onset** image in the micro‐expression sequence.
 
 ## Action Unit Detection
+Most previous work on Action Unit (AU) detection has primarily focused on macro-expressions, where facial morphology observed from static frames provides valuable information. However, with Micro-Expressions (MEs), the facial movements are subtle and require the **analysis of dynamic information across frames**.
+
+
+# Methodology
+In LED, instead of adding the filtered motion to the original image as in traditional motion magnification, only the motion is extracted and used directly for downstream tasks. The motion features can be extracted without learning, but LED introduces learnable parameters in the motion filter to fine-tune the features in an end-to-end manner. This allows LED to learn task-specific features that enhance performance compared to non-learnable motion extraction methods. The learnability is achieved through **automatic differentiation** and using a linearized version of EVM.
+
+To address the issue of non-homogeneous luminance intensity, LED incorporates a normalization scheme. This normalization helps to alleviate inconsistencies in luminance across different frames.
+
+After the motion features have been extracted, they are passed through a Convolutional Neural Network (CNN) for further refinement. The CNN helps to enhance and refine the features extracted by LED.
+
+**LED is designed to be a model-agnostic approach that can be integrated at the beginning of a network. It provides a foundation for ME analysis and can be used as a starting point for subsequent tasks.**
+
+## Motion Representation
+![[Pasted image 20230718035942.png]]
+As you can see on onset frame and apex frame the difference is extremely small. Therefore, the facial dynamics between frames offers better representation to find subtle differences.  The commonly used methods for motion extraction in ME recognition are optical flow and motion magnification. However, these methods suffer from a separation between the motion representation and the learned features, which prevents an end-to-end approach for fine-tuning the motion representation.
+
+This separation poses a challenge because it limits the ability to optimize and refine the motion representation together with the rest of the network in an end-to-end manner. In other words, the motion extraction process and the subsequent feature learning process are not integrated seamlessly, making it difficult to jointly optimize and fine-tune the motion representation based on the specific task requirements.
+
+In LED, the parameters of the motion extraction process are made learnable, meaning they can be adjusted and optimized during training. This allows the motion representation to be fine-tuned alongside the rest of the network, enabling the model to learn task-specific features that enhance performance in Micro-Expression (ME) recognition.
+
+By integrating the motion extraction process with the overall feature learning process in an end-to-end fashion, LED ensures that the motion representation is optimized specifically for the ME recognition task. This leads to improved performance as the model can effectively capture and utilize the subtle motion dynamics present in MEs.
+![[Pasted image 20230718051157.png]]
+
+### Motion Extraction
+EVM, first spatially decomposes the frames then uses a temporal bandpass filter to extract the motion information $B_{xy}^t$ , where x and y refer to the coordinates and t to time. It is found that adding the extracted motion $B_{xy}^t$ is unnecessary for detecting AUs. An issue with the filtering approach is that the user must set the hyperparameters of the filter: amplification factor $a$ and the cutoff frequencies r1 and r2. These values depend highly on the magnitude and amount of the input's temporal changes.  
+
+All these parameters could be learned by automatic differentiation with a neural network but EVM algorithm is computationally expensive and this makes it untrainable alongside a neural network. 
+
+To solve these issues, the proposed LED method, involves three techniques: linearization, learnable parameters, and frame difference normalization:
+
+#### Linearization:
+EVM algorithm can be sped up by linearizing it using a matrix form. In [A Boost in Revealing Subtle Facial Expressions: A Consolidated Eulerian Framework](https://doi.org/10.1109/FG.2019.8756541) the authors linearize the EVM, in our paper the authors change $w_2$ and  $w_1$ to $r_1$ and $r_2$ 
+```python
+def calculate_W(T, alpha=20, r1=0.4, r2=0.05):
+    W = torch.zeros(T, T, dtype=torch.float).to(device)
+    #construct W
+    for i in range(T):
+        for j in range(T):
+            a = j - i
+            b = min(1, i)
+            if j > i:
+                W[i, j] = alpha * (1 - r1) ** a * r1 ** b - alpha * (1 - r2) ** a * r2 ** b
+            elif j == i:
+                W[i, j] = alpha * (r1 - r2)
+    return W
+```
+![[Pasted image 20230718063000.png]]
+
+
+![[Pasted image 20230718063047.png]]
+*This is the linearization on the original paper*
+
+The reason they modified the original version because they are only interested in the motion, not amplification of it. Here $r_1$ and $r2$ are the bandpass values, a is the motion magnification factor, $a= j - i$, $b = min(l, i - 1)$ and $i = j$ corresponding to the number of frames being used. This drastically reduces the computational load compared to EVM, as the motion representation can now be extracted with a simple tensor contraction.
+
+$$ B_{xy}^t = \left( \sum_{i=0}^t I^i_{xy}W_i^t \right)$$
+
+#### Learnable Parameters
+After deriving matrix $W$ matrix now it can be used as a parameter in a neural network that employs automatic differentiation. Instead of directly learning the values of the parameters , we learn the logarithm of each parameter. This ensures that the learned parameter values are always positive.
