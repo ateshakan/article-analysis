@@ -126,7 +126,133 @@ def calculate_W(T, alpha=20, r1=0.4, r2=0.05):
 
 The reason they modified the original version because they are only interested in the motion, not amplification of it. Here $r_1$ and $r2$ are the bandpass values, a is the motion magnification factor, $a= j - i$, $b = min(l, i - 1)$ and $i = j$ corresponding to the number of frames being used. This drastically reduces the computational load compared to EVM, as the motion representation can now be extracted with a simple tensor contraction.
 
-$$ B_{xy}^t = \left( \sum_{i=0}^t I^i_{xy}W_i^t \right)$$
+$$  B_{xy}^t = \left( \sum_{i=0}^t I^i_{xy}W_i^t \right)$$
 
 #### Learnable Parameters
 After deriving matrix $W$ matrix now it can be used as a parameter in a neural network that employs automatic differentiation. Instead of directly learning the values of the parameters , we learn the logarithm of each parameter. This ensures that the learned parameter values are always positive.
+
+By incorporating the optimization process as the first layer, the entire network becomes end-to-end. This means that the motion representation and the subsequent convolutional features are learned simultaneously. This joint learning allows the motion representation to be directly learned from the data, which is different from methods like optical flow and motion magnification.
+
+#### Frame Difference Normalization
+![[Pasted image 20230718161411.png]]
+With linearized formulation we can also think of movement extraction as weighted frame difference. This allows us to apply frame difference normalization which proposed on [DeepPhys: Video-Based Physiological Measurement Using Convolutional Attention Networks]([[1805.07888] DeepPhys: Video-Based Physiological Measurement Using Convolutional Attention Networks (arxiv.org)](https://arxiv.org/abs/1805.07888))
+The authors observe an issue when taking differences between frames due to the assumption of a homogeneous stationary luminance intensity. As a result of uneven skin contours and different distances to the light source the luminance intensity has different spatial distribution with different setups. To remove the effect from the difference $B^t_{xy}$ , it is divided by the temporal mean. We generalize the formula for the weighted frame difference as
+![[Pasted image 20230718162651.png]]
+where Wi are the weights for each frame.
+
+![[Pasted image 20230718162844.png]]
+*It can be seen that the learned parameters provide a cleaner representation and the normalization removes some noisy pixels that do not provide value to the classification*
+
+#### Network Architecture
+The proposed network architecture based on SSSNet from [Micro-expression recognition with noisy labels](https://oulurepo.oulu.fi/handle/10024/32856) due to it's simplicity and performance of the network architecture. These types of architectures are better for this purpose because of the lack of real world data.
+![[Pasted image 20230718163447.png]]
+
+This architecture is modified on the proposed paper:
+- To prevent overfitting, dropout layers are added between the hidden layers of the network. Despite its small size, the network still has a tendency to overfit the data.
+
+- Since the input now consists of a sequence of frames instead of a single frame, modifications are made to the network architecture. Two-dimensional convolution, pooling, batch normalization, and dropout operations are replaced with their three-dimensional counterparts to account for the temporal dimension of the input data.
+
+- Given the increased complexity of the task, the number of channels is also increased. The first convolutional layer has 32 channels, the second convolutional layer has 64 channels, and the linear layer has 256 channels.
+- ![[Pasted image 20230718165728.png]]
+```python
+class Net(nn.Module):
+    def __init__(self, task_num, dropout=0.5):
+        super().__init__()
+        self.task_num = task_num
+        h1 = 32
+        h2 = 64
+        h3 = 256
+        self.conv1 = nn.Conv3d(in_channels=1, out_channels=h1, kernel_size=(1, 5, 5), stride=1)
+        self.pool = nn.MaxPool3d(kernel_size=(1, 3, 3), stride=(1, 3, 3))
+        self.bn1 = nn.BatchNorm3d(h1)
+        self.drop1 = nn.Dropout3d(dropout)
+        
+        self.conv2 = nn.Conv3d(in_channels=h1, out_channels=h2, kernel_size=(2, 3, 3), stride=1)
+        self.bn2 = nn.BatchNorm3d(h2)
+        self.pool2 = nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2))
+        self.drop2 = nn.Dropout3d(dropout)
+
+        self.fc1 = nn.Linear(9 ** 2 * 2 * h2, h3)
+        self.fcs = nn.ModuleList([nn.Linear(h3, 2) for _ in range(self.task_num)])
+        self.drop3 = nn.Dropout(dropout)
+
+        self.alpha = nn.Parameter(torch.log(torch.tensor(10.0)))
+        self.r1 = nn.Parameter(torch.log(torch.tensor(0.4)))
+        self.r2 = nn.Parameter(torch.log(torch.tensor(0.05)))
+```
+### Experiments
+#### Dataset
+CASME II is an updated version of CASME, a dataset used for Micro-Expression (ME) recognition. CASME II offers improvements over its predecessor by increasing the frame rate from 60 frames per second (fps) to 200 fps, providing more detailed temporal information. It consists of a total of 256 samples collected from 26 different subjects.
+
+In CASME II, a total of 19 different Action Units (AUs) have been annotated. However, for the purposes of ME recognition, a subset of eight AUs is commonly used.
+
+These AUs include AU1 (inner brow raiser), AU2 (outer brow raiser), AU4 (brow lowerer), AU7 (lid tightener), AU12 (lip corner puller), AU14 (dimpler), AU15 (lip corner depressor), and AU17 (chin raiser).
+
+SAMM is another dataset used for ME recognition. It contains a total of 159 samples collected from 29 different subjects. In SAMM, a total of 27 different AUs have been annotated. However, for ME recognition purposes, a subset of four AUs is commonly used. These AUs include AU2 (outer brow raiser), AU4 (brow lowerer), AU7 (lid tightener), and AU12 (lip corner puller)
+
+#### Metrics
+To address the limited number of samples in ME recognition and account for the imbalance in class distribution, the [LOSO](https://ai.plainenglish.io/leave-one-subject-out-cross-validation-for-machine-learning-model-557a09c7891d) (leave-one-subject-out) protocol is commonly employed. LOSO is a widely used evaluation method in which each subject in the dataset is treated as the testing data, while the remaining subjects are used as the training data.
+
+The LOSO protocol helps to evaluate the generalization performance of the ME recognition model across different subjects by ensuring that the testing data does not overlap with the training data.
+
+To mitigate the issue of class imbalance, the macro F1-score is often used as an evaluation metric instead of accuracy. The macro F1-score considers the performance of each class individually and calculates the average F1-score across all classes. This helps to provide a more balanced assessment of the model's performance, taking into account the varying class frequencies in the dataset
+![[Pasted image 20230718171859.png]]
+
+```python
+class MultiTaskF1(nn.Module):
+    def __init__(self, task_num):
+        super(MultiTaskF1, self).__init__()
+        self.task_num = task_num
+        
+    def calc_f1(self, label, prediction):
+        _, predicted = torch.max(prediction, 1)
+        f1 = f1_score(label.cpu(), predicted.detach().cpu(), average="macro")
+        return f1
+                        
+    def forward(self, preds, labels):
+        f1s = [self.calc_f1(labels[:, i], preds[i]) for i in range(self.task_num)]
+        return f1s
+```
+
+#### Training settings
+- **Motion Magnification Parameters**: The parameters for motion magnification (a technique used in LED) are set to a = 10, r1 = 0.4, and r2 = 0.05. These values have been frequently used and shown good performance in prior research.
+- **Training Setup**: The training process consists of 400 epochs using the Adam optimizer with a learning rate of 0.0001 and weight decay of 0.001. The LED parameters (a, r1, r2) have a separate learning rate of 0.1, which is changed to 0.01 after 50 epochs. This learning rate scheduling helps stabilize the training process.
+- **Ablation Studies**: In ablation studies, when the log transform is not applied, a lower learning rate of 0.01 is used for the cutoff frequencies.
+- **Data Augmentation**: Temporal augmentation is applied to augment the data. Spatial augmentation strategies such as cropping, rotations, and color jitter are also experimented with, but no performance improvement is observed.
+- **Frame Size**: The frame size is set to 64 x 64. Larger frame sizes (e.g., 128 x 128) show similar results, while smaller frame sizes (e.g., 32 x 32) yield lower performance.
+- **Number of Frames**: LED utilizes five frames for its computations.
+- **ResNet Backbone**: Among ResNet 18 and 34 models, the ResNet 18 model is chosen as it achieves similar results to ResNet 34 but with a smaller network size.
+
+#### Ablation Studies
+![[Pasted image 20230718193829.png]]
+Ablation studies refer to conducting experiments to analyze the impact of specific components or techniques by removing or altering them. By adding normalization we can observe an increase of around one percentage point. By incorporating learning into the process, a similar performance increase can be observed. However, when the log transform is not used for the parameters, the values of r1 and r2 become more unstable and often result in negative values. By applying the log transformation, we can observe faster convergence and more stable values for the parameters, eliminating duplicate solutions represented by negative values. This leads to an improvement in performance, as shown in the last row of the table.
+
+![[Pasted image 20230718193026.png]]
+- **RGB**: Initial experiment using raw RGB videos shows limited performance, with only AU4 being identified effectively. (*Subtle changes between RGB frames are challenging to learn with limited data and a small CNN.*)
+- **MM**: Motion magnification is applied, resulting in significant performance improvement, increasing the average F1-score from 55.3 to 71.7. (*Motion magnification helps identify even the difficult AU7*)
+- **FD**: Simple frame difference, using the difference between consecutive frames, shows a slight performance increase compared to motion magnification.
+- **LED**: LED method, with automatically learned parameters in an end-to-end fashion, outperforms other approaches, indicating the effectiveness of learning the motion representation from the data.
+
+##### Number of Frames
+The best performance was achieved with 5 frames, but there were negligible differences when using 8 or 12 frames. This suggests that many of the frames are redundant when using LED, but relying on a single frame may not provide sufficient information. It's important to note that these findings may not fully generalize to other methods, and LED's preference for a lower number of frames could be attributed to its limitations in learning more complex patterns.
+![[Pasted image 20230718200521.png]]
+##### Learnability
+![[Pasted image 20230718200643.png]]
+This table illustrate how the parameters change during the training process on the CASMEII dataset. Specifically, we observe a significant decrease in the magnification value, indicating that it is not necessary for the motion extraction approach. However, it still serves as a scaling factor and takes on different values across datasets and subjects. We notice that the values tend to converge around 100 frames, suggesting that a narrow frequency band is sufficient for the network.
+
+#### Comparison to State of Art
+
+
+![[Pasted image 20230718201615.png]]
+CASME II Results:
+- LED outperformed previous methods for detecting action units in CASME II.
+- The average F1-Score improved by around 11 compared to the DVASP method when using the SSSNet backbone.
+- The LED method also showed promising results with the Resnet18 backbone, indicating its generalizability to other network architectures.
+
+SAMM Results:
+- SAMM dataset was observed to be more challenging compared to CASME II.
+- LED method achieved better performance than other methods, except for the SCA method in detecting AU12.
+- On average, LED achieved an increase of around 9 F1-Score compared to the DVASP method.
+
+CASME Results:
+- Results for CASME dataset were not explicitly discussed in the provided information but can be found in the supplementary material.
